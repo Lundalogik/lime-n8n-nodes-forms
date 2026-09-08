@@ -1,3 +1,3 @@
 export enum ObservableType {
-    FORM = 'FORM',
+	FORM = 'FORM',
 }

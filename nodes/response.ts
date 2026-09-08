@@ -5,8 +5,8 @@ import { ErrorResponse, WorkflowErrorContext } from './errorHandling';
  * Wrapper for successful response
  */
 export type SuccessResponse<T> = {
-    success: true;
-    data: T;
+	success: true;
+	data: T;
 };
 
 /**
@@ -33,8 +33,8 @@ export type APIResponse<T> = SuccessResponse<T> | ErrorResponse;
  * @group Response
  */
 export type FileAPIResponse<T> = {
-    json: APIResponse<T>;
-    binary?: Record<string, IBinaryData>;
+	json: APIResponse<T>;
+	binary?: Record<string, IBinaryData>;
 };
 
 /**
@@ -49,6 +49,6 @@ export type FileAPIResponse<T> = {
  * @group Response
  */
 export type WorkflowFileResponse<T> = {
-    json: WorkflowResponse<T>;
-    binary?: Record<string, IBinaryData>;
+	json: WorkflowResponse<T>;
+	binary?: Record<string, IBinaryData>;
 };

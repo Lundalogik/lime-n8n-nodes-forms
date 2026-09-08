@@ -6,19 +6,19 @@ const USER_AGENT = `${SOURCE_APPLICATION}/${packageVersion} (n8n-node)`;
 const MAX_INPUT_LENGTH = 200;
 
 type LimeHeaderName =
-    | 'X-Source-Application'
-    | 'User-Agent'
-    | 'X-N8N-Instance-Id'
-    | 'X-N8N-Workflow-Id'
-    | 'X-N8N-Workflow-Name'
-    | 'X-N8N-Execution-Id'
-    | 'X-N8N-Execution-Mode'
-    | 'X-N8N-Node-Name'
-    | 'X-N8N-Node-Type';
+	| 'X-Source-Application'
+	| 'User-Agent'
+	| 'X-N8N-Instance-Id'
+	| 'X-N8N-Workflow-Id'
+	| 'X-N8N-Workflow-Name'
+	| 'X-N8N-Execution-Id'
+	| 'X-N8N-Execution-Mode'
+	| 'X-N8N-Node-Name'
+	| 'X-N8N-Node-Type';
 
 function sanitize(value: string): string | undefined {
-    const truncated = [...value].slice(0, MAX_INPUT_LENGTH).join('');
-    return encodeURIComponent(truncated) || undefined;
+	const truncated = [...value].slice(0, MAX_INPUT_LENGTH).join('');
+	return encodeURIComponent(truncated) || undefined;
 }
 
 /**
@@ -38,27 +38,24 @@ function sanitize(value: string): string | undefined {
  * @public
  * @group Utils
  */
-export function buildLimeHeaders(
-    context: IAllExecuteFunctions
-): Record<string, string> {
-    const workflow = context.getWorkflow();
-    const node = context.getNode();
+export function buildLimeHeaders(context: IAllExecuteFunctions): Record<string, string> {
+	const workflow = context.getWorkflow();
+	const node = context.getNode();
 
-    const candidates: Record<LimeHeaderName, string | undefined> = {
-        'X-Source-Application': SOURCE_APPLICATION,
-        'User-Agent': USER_AGENT,
-        'X-N8N-Instance-Id': context.getInstanceId(),
-        'X-N8N-Workflow-Id': workflow.id,
-        'X-N8N-Workflow-Name': workflow.name
-            ? sanitize(workflow.name)
-            : undefined,
-        'X-N8N-Execution-Id': context.getExecutionId(),
-        'X-N8N-Execution-Mode': context.getMode?.(),
-        'X-N8N-Node-Name': sanitize(node.name),
-        'X-N8N-Node-Type': node.type,
-    };
+	const candidates: Record<LimeHeaderName, string | undefined> = {
+		'X-Source-Application': SOURCE_APPLICATION,
+		'User-Agent': USER_AGENT,
+		'X-N8N-Instance-Id': context.getInstanceId(),
+		'X-N8N-Workflow-Id': workflow.id,
+		'X-N8N-Workflow-Name': workflow.name ? sanitize(workflow.name) : undefined,
+		'X-N8N-Execution-Id': context.getExecutionId(),
+		'X-N8N-Execution-Mode': context.getMode?.(),
+		'X-N8N-Node-Name': sanitize(node.name),
+		'X-N8N-Node-Type': node.type,
+	};
 
-    return Object.fromEntries(
-        Object.entries(candidates).filter(([, value]) => value)
-    ) as Record<string, string>;
+	return Object.fromEntries(Object.entries(candidates).filter(([, value]) => value)) as Record<
+		string,
+		string
+	>;
 }
