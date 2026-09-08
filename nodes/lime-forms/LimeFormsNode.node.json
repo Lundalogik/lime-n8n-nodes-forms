@@ -1,0 +1,18 @@
+{
+  "node": "n8n-nodes-base.limeCrmForms",
+  "nodeVersion": "1.0",
+  "codexVersion": "1.0",
+  "categories": ["CRM"],
+  "resources": {
+    "credentialDocumentation": [
+      {
+        "url": "https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/node-reference/"
+      }
+    ],
+    "primaryDocumentation": [
+      {
+        "url": "https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/node-reference/"
+      }
+    ]
+  }
+}
