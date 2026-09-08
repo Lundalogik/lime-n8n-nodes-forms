@@ -71,7 +71,7 @@ export class LimeCrmFormsTrigger implements INodeType {
 				description: 'Name for this webhook subscription',
 			},
 			{
-				displayName: 'Form to monitor',
+				displayName: 'Form to Monitor Name or ID',
 				name: 'formId',
 				type: 'options',
 				typeOptions: {
