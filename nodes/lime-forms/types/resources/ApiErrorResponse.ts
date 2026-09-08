@@ -8,11 +8,11 @@
  * @see https://github.com/Lundalogik/lime-forms/blob/2.x/app/Helpers/ApiResponse.php
  */
 export type ApiErrorResponse<T> = {
-    success: false;
-    error: {
-        /** HTTP status text, e.g. `Conflict` for a 409. */
-        code: string;
-        message: string;
-        data: T;
-    };
+	success: false;
+	error: {
+		/** HTTP status text, e.g. `Conflict` for a 409. */
+		code: string;
+		message: string;
+		data: T;
+	};
 };

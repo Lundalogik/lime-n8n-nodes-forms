@@ -1,4 +1,4 @@
 export enum ReceiptType {
-    SUBMISSION = 'SUBMISSION',
-    SIGNING = 'SIGNING',
+	SUBMISSION = 'SUBMISSION',
+	SIGNING = 'SIGNING',
 }

@@ -1,10 +1,4 @@
-import {
-    createCipheriv,
-    createDecipheriv,
-    createHmac,
-    hkdfSync,
-    randomBytes,
-} from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes } from 'node:crypto';
 import { NodeOperationError, INode } from 'n8n-workflow';
 
 const ENCRYPTION_KEY_ENV = 'N8N_ENCRYPTION_KEY';
@@ -21,7 +15,7 @@ const HKDF_INFO = 'lime-webhook-secret';
  * @group Utils
  */
 function generateHmac(key: string, data: Buffer): string {
-    return 'sha256=' + createHmac('sha256', key).update(data).digest('hex');
+	return 'sha256=' + createHmac('sha256', key).update(data).digest('hex');
 }
 
 /**
@@ -36,12 +30,8 @@ function generateHmac(key: string, data: Buffer): string {
  * @public
  * @group Utils
  */
-export function verifyHmac(
-    key: string,
-    data: Buffer,
-    comparedHmac: string
-): boolean {
-    return generateHmac(key, data) === comparedHmac;
+export function verifyHmac(key: string, data: Buffer, comparedHmac: string): boolean {
+	return generateHmac(key, data) === comparedHmac;
 }
 
 /**
@@ -61,25 +51,22 @@ export function verifyHmac(
  * @throws {NodeOperationError} If verification of the request fails due to missing or invalid authentication data.
  */
 export const verifyRequest = (
-    node: INode,
-    limeSignature: string,
-    webhookSecret: string,
-    data: Buffer
+	node: INode,
+	limeSignature: string,
+	webhookSecret: string,
+	data: Buffer,
 ): void => {
-    if (!limeSignature) {
-        throw new NodeOperationError(
-            node,
-            'Webhook authentication failed, signature key is missing while secret is present!'
-        );
-    }
+	if (!limeSignature) {
+		throw new NodeOperationError(
+			node,
+			'Webhook authentication failed, signature key is missing while secret is present!',
+		);
+	}
 
-    const expectedHmac = generateHmac(webhookSecret, data);
-    if (expectedHmac !== limeSignature) {
-        throw new NodeOperationError(
-            node,
-            'Webhook authentication failed, signatures do not match'
-        );
-    }
+	const expectedHmac = generateHmac(webhookSecret, data);
+	if (expectedHmac !== limeSignature) {
+		throw new NodeOperationError(node, 'Webhook authentication failed, signatures do not match');
+	}
 };
 
 /**
@@ -89,13 +76,11 @@ export const verifyRequest = (
  * @return The master encryption key.
  */
 const getMasterKey = (): string => {
-    const key = process.env[ENCRYPTION_KEY_ENV];
-    if (!key) {
-        throw new Error(
-            `${ENCRYPTION_KEY_ENV} must be set to manage Lime CRM webhooks`
-        );
-    }
-    return key;
+	const key = process.env[ENCRYPTION_KEY_ENV];
+	if (!key) {
+		throw new Error(`${ENCRYPTION_KEY_ENV} must be set to manage Lime CRM webhooks`);
+	}
+	return key;
 };
 
 /**
@@ -105,18 +90,13 @@ const getMasterKey = (): string => {
  * @return The encrypted string encoded in base64 format.
  */
 export const encryptSecret = (plaintext: string): string => {
-    const salt = randomBytes(16);
-    const iv = randomBytes(12);
-    const key = Buffer.from(
-        hkdfSync('sha256', getMasterKey(), salt, HKDF_INFO, 32)
-    );
-    const cipher = createCipheriv('aes-256-gcm', key, iv);
-    const ct = Buffer.concat([
-        cipher.update(plaintext, 'utf8'),
-        cipher.final(),
-    ]);
-    const tag = cipher.getAuthTag();
-    return Buffer.concat([salt, iv, tag, ct]).toString('base64');
+	const salt = randomBytes(16);
+	const iv = randomBytes(12);
+	const key = Buffer.from(hkdfSync('sha256', getMasterKey(), salt, HKDF_INFO, 32));
+	const cipher = createCipheriv('aes-256-gcm', key, iv);
+	const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+	const tag = cipher.getAuthTag();
+	return Buffer.concat([salt, iv, tag, ct]).toString('base64');
 };
 
 /**
@@ -126,17 +106,13 @@ export const encryptSecret = (plaintext: string): string => {
  * @return The decrypted data as a UTF-8 string.
  */
 export const decryptSecret = (blob: string): string => {
-    const buf = Buffer.from(blob, 'base64');
-    const salt = buf.subarray(0, 16);
-    const iv = buf.subarray(16, 28);
-    const tag = buf.subarray(28, 44);
-    const ct = buf.subarray(44);
-    const key = Buffer.from(
-        hkdfSync('sha256', getMasterKey(), salt, HKDF_INFO, 32)
-    );
-    const decipher = createDecipheriv('aes-256-gcm', key, iv);
-    decipher.setAuthTag(tag);
-    return Buffer.concat([decipher.update(ct), decipher.final()]).toString(
-        'utf8'
-    );
+	const buf = Buffer.from(blob, 'base64');
+	const salt = buf.subarray(0, 16);
+	const iv = buf.subarray(16, 28);
+	const tag = buf.subarray(28, 44);
+	const ct = buf.subarray(44);
+	const key = Buffer.from(hkdfSync('sha256', getMasterKey(), salt, HKDF_INFO, 32));
+	const decipher = createDecipheriv('aes-256-gcm', key, iv);
+	decipher.setAuthTag(tag);
+	return Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8');
 };

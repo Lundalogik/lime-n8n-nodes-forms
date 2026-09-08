@@ -1,23 +1,18 @@
-import {
-    NodeApiError,
-    NodeOperationError,
-    JsonObject,
-    INode,
-} from 'n8n-workflow';
+import { NodeApiError, NodeOperationError, JsonObject, INode } from 'n8n-workflow';
 
 /**
  * Wrapper for the error data used in Lime workflows
  */
 export type WorkflowErrorContext = {
-    message: string;
+	message: string;
 } & JsonObject;
 
 /**
  * Structure for unsuccessful response used in communication layer.
  */
 export type ErrorResponse = {
-    success: false;
-    data: { error: WorkflowErrorContext };
+	success: false;
+	data: { error: WorkflowErrorContext };
 };
 
 /**
@@ -32,20 +27,17 @@ export type ErrorResponse = {
  * or {@link NodeOperationError}
  */
 export function handleWorkflowError(
-    node: INode,
-    errorContext: WorkflowErrorContext,
-    isApiError: boolean = false
+	node: INode,
+	errorContext: WorkflowErrorContext,
+	isApiError: boolean = false,
 ): ErrorResponse {
-    if (
-        node.onError === 'continueErrorOutput' ||
-        node.onError === 'continueRegularOutput'
-    ) {
-        return {
-            success: false,
-            data: { error: errorContext },
-        };
-    } else if (isApiError) {
-        throw new NodeApiError(node, errorContext);
-    }
-    throw new NodeOperationError(node, errorContext.message);
+	if (node.onError === 'continueErrorOutput' || node.onError === 'continueRegularOutput') {
+		return {
+			success: false,
+			data: { error: errorContext },
+		};
+	} else if (isApiError) {
+		throw new NodeApiError(node, errorContext);
+	}
+	throw new NodeOperationError(node, errorContext.message);
 }

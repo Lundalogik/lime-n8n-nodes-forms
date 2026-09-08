@@ -21,23 +21,22 @@ const HTTP_STATUS_CONFLICT = 409;
  * @see https://github.com/Lundalogik/lime-forms/blob/2.x/app/Http/Controllers/N8N/ObservableWebhookController.php
  */
 export function getConflictingWebhook(
-    error: NodeApiError
+	error: NodeApiError,
 ): ObservableWebhookSimpleResource | undefined {
-    // n8n types `httpCode` as a string, but normalise so a numeric status
-    // matches too.
-    if (Number(error?.httpCode) !== HTTP_STATUS_CONFLICT) {
-        return undefined;
-    }
+	// n8n types `httpCode` as a string, but normalise so a numeric status
+	// matches too.
+	if (Number(error?.httpCode) !== HTTP_STATUS_CONFLICT) {
+		return undefined;
+	}
 
-    const body = error.context
-        ?.data as ApiErrorResponse<ObservableWebhookSimpleResource>;
+	const body = error.context?.data as ApiErrorResponse<ObservableWebhookSimpleResource>;
 
-    const responseData = body?.error?.data;
-    if (responseData === undefined) {
-        Logger.warn(
-            'Tried to parse response data from Lime Forms duplicate check, but was unable to verify'
-        );
-    }
+	const responseData = body?.error?.data;
+	if (responseData === undefined) {
+		Logger.warn(
+			'Tried to parse response data from Lime Forms duplicate check, but was unable to verify',
+		);
+	}
 
-    return responseData;
+	return responseData;
 }

@@ -1,9 +1,9 @@
 import {
-    ICredentialTestRequest,
-    ICredentialType,
-    INodeProperties,
-    IAuthenticate,
-    IHttpRequestMethods,
+	ICredentialTestRequest,
+	ICredentialType,
+	INodeProperties,
+	IAuthenticate,
+	IHttpRequestMethods,
 } from 'n8n-workflow';
 
 export const FORMS_API_CREDENTIALS_NAME = 'limeFormsApi';
@@ -37,47 +37,47 @@ export const FORMS_API_CREDENTIALS_NAME = 'limeFormsApi';
  *
  */
 export class LimeFormsApi implements ICredentialType {
-    name = FORMS_API_CREDENTIALS_NAME;
-    displayName = 'Lime CRM Forms API';
-    documentationUrl = 'https://docs.lime-forms.com/';
-    icon = 'file:assets/lime-crm.svg' as const;
-    properties: INodeProperties[] = [
-        {
-            displayName: 'Server URL',
-            name: 'url',
-            type: 'string',
-            default: '',
-            placeholder: 'https://instance.lime-forms.com',
-            required: true,
-            description: 'The URL of your Lime Forms instance',
-        },
-        {
-            displayName: 'API Key',
-            name: 'apiKey',
-            type: 'string',
-            typeOptions: {
-                password: true,
-            },
-            default: '',
-            required: true,
-            description: 'API key obtained from Lime Forms',
-        },
-    ];
+	name = FORMS_API_CREDENTIALS_NAME;
+	displayName = 'Lime CRM Forms API';
+	documentationUrl = 'https://docs.lime-forms.com/';
+	icon = 'file:assets/lime-crm.svg' as const;
+	properties: INodeProperties[] = [
+		{
+			displayName: 'Server URL',
+			name: 'url',
+			type: 'string',
+			default: '',
+			placeholder: 'https://instance.lime-forms.com',
+			required: true,
+			description: 'The URL of your Lime Forms instance',
+		},
+		{
+			displayName: 'API Key',
+			name: 'apiKey',
+			type: 'string',
+			typeOptions: {
+				password: true,
+			},
+			default: '',
+			required: true,
+			description: 'API key obtained from Lime Forms',
+		},
+	];
 
-    test: ICredentialTestRequest = {
-        request: {
-            baseURL: '={{$credentials.url}}'.replace('/+$', ''),
-            url: '/api/v1/external-integrations/ping',
-            method: 'GET' as IHttpRequestMethods,
-        },
-    };
+	test: ICredentialTestRequest = {
+		request: {
+			baseURL: '={{$credentials.url}}'.replace('/+$', ''),
+			url: '/api/v1/external-integrations/ping',
+			method: 'GET' as IHttpRequestMethods,
+		},
+	};
 
-    authenticate: IAuthenticate = {
-        type: 'generic',
-        properties: {
-            headers: {
-                Authorization: '=Bearer {{$credentials.apiKey}}',
-            },
-        },
-    };
+	authenticate: IAuthenticate = {
+		type: 'generic',
+		properties: {
+			headers: {
+				Authorization: '=Bearer {{$credentials.apiKey}}',
+			},
+		},
+	};
 }
