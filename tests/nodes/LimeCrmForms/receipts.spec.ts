@@ -1,6 +1,6 @@
 import { IExecuteFunctions } from 'n8n-workflow';
-import { getReceipt } from '../../../nodes/lime-forms/transport/receipts';
-import { ReceiptType } from '../../../nodes/lime-forms/types/enums/ReceiptType';
+import { getReceipt } from '../../../nodes/LimeCrmForms/transport/receipts';
+import { ReceiptType } from '../../../nodes/LimeCrmForms/types/enums/ReceiptType';
 
 const mockHttpRequestWithAuthentication = { call: jest.fn() };
 const mockPrepareBinaryData = jest.fn();

@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto';
-import { LimeFormsTrigger } from '../../../nodes/lime-forms/LimeFormsTrigger.node';
+import { LimeCrmFormsTrigger } from '../../../nodes/LimeCrmForms/LimeCrmFormsTrigger.node';
 
-describe('LimeFormsTrigger webhook secret handling', () => {
+describe('LimeCrmFormsTrigger webhook secret handling', () => {
 	const node = {
 		id: '1',
 		name: 'Lime Forms',
@@ -43,7 +43,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 				helpers: { httpRequestWithAuthentication },
 			});
 
-			const trigger = new LimeFormsTrigger();
+			const trigger = new LimeCrmFormsTrigger();
 			const result = await trigger.webhookMethods.default.create.call(loader as never);
 
 			expect(result).toBe(true);
@@ -71,7 +71,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 				getWorkflowStaticData: jest.fn().mockReturnValue({}),
 			});
 
-			const trigger = new LimeFormsTrigger();
+			const trigger = new LimeCrmFormsTrigger();
 			await expect(trigger.webhookMethods.default.create.call(loader as never)).rejects.toThrow(
 				'The credential has no Webhook Secret. Add one to the ' +
 					'credential and re-activate the workflow.',
@@ -136,7 +136,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 							data: { id: 'wh-456' },
 						});
 
-					const trigger = new LimeFormsTrigger();
+					const trigger = new LimeCrmFormsTrigger();
 					const result = await trigger.webhookMethods.default.create.call(
 						buildCreateLoader(httpRequestWithAuthentication, staticData) as never,
 					);
@@ -171,7 +171,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 					context: {},
 				});
 
-				const trigger = new LimeFormsTrigger();
+				const trigger = new LimeCrmFormsTrigger();
 
 				await expect(
 					trigger.webhookMethods.default.create.call(
@@ -188,7 +188,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 					.mockRejectedValueOnce(buildConflict())
 					.mockResolvedValueOnce({ success: false, data: null });
 
-				const trigger = new LimeFormsTrigger();
+				const trigger = new LimeCrmFormsTrigger();
 
 				await expect(
 					trigger.webhookMethods.default.create.call(
@@ -205,7 +205,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 					message: 'Internal Server Error',
 				});
 
-				const trigger = new LimeFormsTrigger();
+				const trigger = new LimeCrmFormsTrigger();
 
 				await expect(
 					trigger.webhookMethods.default.create.call(
@@ -231,7 +231,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 				helpers: { httpRequestWithAuthentication },
 			});
 
-			const trigger = new LimeFormsTrigger();
+			const trigger = new LimeCrmFormsTrigger();
 			const result = await trigger.webhookMethods.default.checkExists.call(loader as never);
 
 			// Reported as missing so `create` re-registers the webhook with
@@ -259,7 +259,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 				getWorkflowStaticData: jest.fn().mockReturnValue(staticData),
 			});
 
-			const trigger = new LimeFormsTrigger();
+			const trigger = new LimeCrmFormsTrigger();
 			const response = await trigger.webhook.call(loader as never);
 
 			expect(response.workflowData).toEqual([[body.data]]);
@@ -279,7 +279,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 				getWorkflowStaticData: jest.fn().mockReturnValue(staticData),
 			});
 
-			const trigger = new LimeFormsTrigger();
+			const trigger = new LimeCrmFormsTrigger();
 			const response = await trigger.webhook.call(loader as never);
 
 			expect(response.workflowData![0]).toEqual([
@@ -304,7 +304,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 				getWorkflowStaticData: jest.fn().mockReturnValue(staticData),
 			});
 
-			const trigger = new LimeFormsTrigger();
+			const trigger = new LimeCrmFormsTrigger();
 			const response = await trigger.webhook.call(loader as never);
 
 			expect(response.workflowData![0]).toEqual([

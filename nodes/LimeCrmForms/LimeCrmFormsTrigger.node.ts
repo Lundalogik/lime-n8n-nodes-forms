@@ -30,7 +30,7 @@ import { handleWorkflowError } from '../errorHandling';
 
 const FORMS_OBSERVABLE_WEBHOOK_NAME_PREFIX = 'N8N';
 
-export class LimeFormsTrigger implements INodeType {
+export class LimeCrmFormsTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Lime CRM Forms Trigger',
 		name: 'limeCrmFormsTrigger',

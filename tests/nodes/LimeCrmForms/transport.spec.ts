@@ -1,4 +1,4 @@
-import { LimeFormsRequest } from '../../../nodes/lime-forms/transport/request';
+import { LimeFormsRequest } from '../../../nodes/LimeCrmForms/transport/request';
 
 describe('LimeFormsRequest', () => {
 	const mockLoader = {

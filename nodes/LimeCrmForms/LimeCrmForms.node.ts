@@ -11,7 +11,7 @@ import { RECEIPT_RESOURCE } from './models';
 import { ReceiptType } from './types/enums/ReceiptType';
 import { getReceipt } from './transport/receipts';
 
-export class LimeFormsNode implements INodeType {
+export class LimeCrmForms implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Lime CRM Forms',
 		name: 'limeCrmForms',
