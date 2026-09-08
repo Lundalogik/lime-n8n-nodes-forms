@@ -5,5 +5,5 @@
 		"type": true
 	},
 	"tags": ["-lintignore"],
-	"entry": ["credentials/**/*.credentials.ts", "nodes/**/*.node.ts"]
+	"entry": ["credentials/index.ts", "nodes/index.ts"]
 }
