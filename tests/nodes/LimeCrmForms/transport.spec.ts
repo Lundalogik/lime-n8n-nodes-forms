@@ -18,7 +18,7 @@ describe('LimeFormsRequest', () => {
 	};
 
 	it('runs request with authentication', async () => {
-		const req = new LimeFormsRequest(mockLoader as any);
+		const req = new LimeFormsRequest(mockLoader as never);
 		const result = await req.get('/test');
 		expect(mockLoader.getCredentials).toHaveBeenCalled();
 		expect(mockLoader.helpers.httpRequestWithAuthentication).toHaveBeenCalled();
@@ -30,7 +30,7 @@ describe('LimeFormsRequest', () => {
 			...mockLoader,
 			getCredentials: jest.fn().mockResolvedValue(undefined),
 		};
-		const req = new LimeFormsRequest(loaderNoCreds as any);
+		const req = new LimeFormsRequest(loaderNoCreds as never);
 		await expect(req.get('/test')).rejects.toThrow('No credentials provided');
 	});
 });
