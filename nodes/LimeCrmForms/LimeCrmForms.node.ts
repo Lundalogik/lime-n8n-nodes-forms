@@ -7,6 +7,7 @@ import {
 	NodePropertyTypes,
 } from 'n8n-workflow';
 import { FORMS_API_CREDENTIALS_NAME } from '../../credentials';
+import { toNodeError } from '../errorHandling';
 import { RECEIPT_RESOURCE } from './models';
 import { ReceiptType } from './types/enums/ReceiptType';
 import { getReceipt } from './transport/receipts';
@@ -150,7 +151,7 @@ export class LimeCrmForms implements INodeType {
 					});
 					continue;
 				}
-				throw error;
+				throw toNodeError(this.getNode(), error);
 			}
 		}
 
