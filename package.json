@@ -1,0 +1,68 @@
+{
+	"name": "@limetech/n8n-nodes-lime-forms",
+	"version": "0.0.0-semantically-released",
+	"description": "n8n community node for Lime Forms — trigger workflows on form submissions",
+	"license": "MIT",
+	"homepage": "https://www.lime-technologies.com",
+	"keywords": [
+		"n8n-community-node-package",
+		"lime-forms",
+		"lime-technologies",
+		"lundalogik",
+		"forms",
+		"webhook"
+	],
+	"author": {
+		"name": "Lime Technologies",
+		"email": "limecrmengineering@lime.tech",
+		"url": "https://www.lime-technologies.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Lundalogik/lime-n8n-nodes-forms.git"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"format": "prettier --check .",
+		"format:fix": "prettier --write .",
+		"prepublishOnly": "n8n-node prerelease",
+		"knip": "knip",
+		"test": "jest --passWithNoTests"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/LimeFormsApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/LimeCrmFormsTrigger/LimeCrmFormsTrigger.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "^0.46.2",
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/git": "^10.0.1",
+		"@types/jest": "^30.0.0",
+		"eslint": "9.32.0",
+		"jest": "^30.3.0",
+		"knip": "^5.88.1",
+		"prettier": "3.6.2",
+		"semantic-release": "^25.0.9",
+		"ts-jest": "^29.4.6",
+		"typescript": "5.9.2"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

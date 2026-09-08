@@ -1,0 +1,27 @@
+# Build output
+dist
+*.tsbuildinfo
+
+# Dependencies
+node_modules
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# Test coverage
+coverage
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Other editors
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
