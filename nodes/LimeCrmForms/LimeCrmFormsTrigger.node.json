@@ -1,5 +1,5 @@
 {
-	"node": "@limetech/n8n-nodes-lime-forms.limeCrmForms",
+	"node": "@limetech/n8n-nodes-lime-forms.limeCrmFormsTrigger",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Productivity"],
