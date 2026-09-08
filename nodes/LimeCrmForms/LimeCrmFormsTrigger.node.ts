@@ -37,6 +37,7 @@ export class LimeCrmFormsTrigger implements INodeType {
 		documentationUrl:
 			'https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/node-reference/',
 		group: ['trigger'],
+		subtitle: 'On form submission',
 		version: 1,
 		icon: 'file:assets/lime-forms.svg',
 		description: 'Handle webhooks from Lime CRM Forms',
