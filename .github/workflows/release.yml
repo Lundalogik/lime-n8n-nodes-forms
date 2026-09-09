@@ -49,23 +49,12 @@ jobs:
       - name: Build package
         run: npm run build
 
-      # Reports token availability without exposing the secret value: the expression
-      # collapses the secrets to a "yes"/"no" string, so only that derived flag --
-      # never the token itself -- enters the shell environment.
-      - name: Report release token availability
-        env:
-            has_token: ${{ (secrets.DISPATCH_TOKEN != '' || secrets.LIME_CI_SEMANTIC_RELEASE != '') && 'yes' || 'no' }}
-        run: |
-            if [ "$has_token" = "yes" ]; then
-                echo "::notice::Token available to push release with branch protection: yes"
-            else
-                echo "::warning::Token available to push release with branch protection: no. If a ruleset restricts pushes to main, the release commit push will be rejected. Set up the LIME_CI_SEMANTIC_RELEASE or DISPATCH_TOKEN repo secret with a token for a user that can bypass it."
-            fi
-
       - name: Semantic release
         run: npx semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.DISPATCH_TOKEN || secrets.LIME_CI_SEMANTIC_RELEASE || secrets.GITHUB_TOKEN }}
+          # PAT of the lime-opensource service user, which pushes the release
+          # commit and creates the GitHub release in public repos.
+          GITHUB_TOKEN: ${{ secrets.LIME_OPENSOURCE_SEMANTIC_RELEASE }}
           # Provenance is required by n8n for verified community nodes.
           NPM_CONFIG_PROVENANCE: 'true'
           # Lets the prepublishOnly guard (n8n-node prerelease) allow the publish.
