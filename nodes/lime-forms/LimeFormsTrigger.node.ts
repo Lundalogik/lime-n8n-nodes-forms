@@ -22,10 +22,11 @@ import { ObservableActionType } from './types/enums/ObservableAction';
 import { ObservableType } from './types/enums/ObservableType';
 import { FORMS_API_CREDENTIALS_NAME } from '../../credentials';
 import { getWorkflowUrl } from './utils/workflow';
+import { verifyHmac } from '../crypto';
+import { getWebhookSecret } from '../webhookSecret';
+import { limeFormsApiTest } from '../credentialTests';
 import { getConflictingWebhook } from './utils/errors';
-import { decryptSecret, encryptSecret, verifyHmac } from '../crypto';
 import { handleWorkflowError } from '../errorHandling';
-import { randomBytes } from 'node:crypto';
 
 const FORMS_OBSERVABLE_WEBHOOK_NAME_PREFIX = 'N8N';
 
@@ -46,6 +47,7 @@ export class LimeFormsTrigger implements INodeType {
 			{
 				name: FORMS_API_CREDENTIALS_NAME,
 				required: true,
+				testedBy: 'limeFormsApiTest',
 			},
 		],
 		inputs: [],
@@ -83,6 +85,9 @@ export class LimeFormsTrigger implements INodeType {
 	};
 
 	methods = {
+		credentialTest: {
+			limeFormsApiTest,
+		},
 		loadOptions: {
 			async getForms(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				const response = await new LimeFormsRequest<FormExternalIntegrationSimpleResource[]>(
@@ -108,6 +113,18 @@ export class LimeFormsTrigger implements INodeType {
 		default: {
 			async checkExists(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');
+
+				// Older versions stored an encrypted copy of the secret in
+				// static data. The webhook in Lime Forms still signs with
+				// that secret, which is no longer readable, so report the
+				// webhook as missing to have `create` re-register it with
+				// the secret from the credential (the 409 handling deletes
+				// the stale one).
+				if (webhookData.webhookSecret) {
+					delete webhookData.webhookSecret;
+					return false;
+				}
+
 				const webhookId = webhookData.id;
 				if (webhookId === undefined) {
 					return false;
@@ -132,12 +149,11 @@ export class LimeFormsTrigger implements INodeType {
 
 			async create(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');
-				// Generate a per-webhook secret, keep an encrypted copy in the
-				// workflow static data and only ever hand the plaintext to Lime
-				// Forms. The secret is decrypted on each incoming request to
-				// validate the signature. See {@link encryptSecret}.
-				const rawSecret = randomBytes(32).toString('hex');
-				webhookData.webhookSecret = encryptSecret(rawSecret);
+				// The secret comes from the credential, where n8n keeps it
+				// encrypted at rest. It is handed to Lime Forms on
+				// registration and used to validate the signature of each
+				// incoming request.
+				const webhookSecret = await getWebhookSecret(this, FORMS_API_CREDENTIALS_NAME);
 
 				const data = {
 					name: `${FORMS_OBSERVABLE_WEBHOOK_NAME_PREFIX}: ${this.getNodeParameter('name')}`,
@@ -145,7 +161,7 @@ export class LimeFormsTrigger implements INodeType {
 					observableId: this.getNodeParameter('formId'),
 					action: ObservableActionType.FORM_SUBMITTED,
 					webhookUrl: this.getNodeWebhookUrl('default'),
-					secret: rawSecret,
+					secret: webhookSecret,
 					workflowUrl: getWorkflowUrl(
 						this.getNode(),
 						this.getInstanceBaseUrl(),
@@ -176,10 +192,10 @@ export class LimeFormsTrigger implements INodeType {
 					// 409 indicates a duplicate webhook already exists in Lime
 					// Forms, matched on observable type, observable id, action
 					// and webhook url - the name is not part of that check. Its
-					// secret was set on an earlier registration and is unknown
-					// to us, so reusing it would resurrect the "signatures do
-					// not match" failures. Delete the stale webhook and recreate
-					// it with the freshly generated secret.
+					// secret was set on an earlier registration and may differ
+					// from the current one, so reusing it would resurrect
+					// the "signatures do not match" failures. Delete the stale
+					// webhook and recreate it with the current secret.
 					const conflicting = getConflictingWebhook(error);
 
 					if (conflicting === undefined) {
@@ -245,15 +261,7 @@ export class LimeFormsTrigger implements INodeType {
 				);
 			}
 
-			const webhookData = this.getWorkflowStaticData('node');
-			const encryptedSecret = webhookData.webhookSecret as string | undefined;
-			if (!encryptedSecret) {
-				throw new NodeOperationError(
-					this.getNode(),
-					'Webhook is not registered: missing secret in static data',
-				);
-			}
-			const webhookSecret = decryptSecret(encryptedSecret);
+			const webhookSecret = await getWebhookSecret(this, FORMS_API_CREDENTIALS_NAME);
 			const isValidSignature = verifyHmac(
 				webhookSecret,
 				Buffer.from(JSON.stringify(body)),

@@ -1,6 +1,5 @@
 import { createHmac } from 'node:crypto';
 import { LimeFormsTrigger } from '../../../nodes/lime-forms/LimeFormsTrigger.node';
-import { decryptSecret, encryptSecret } from '../../../nodes/crypto';
 
 describe('LimeFormsTrigger webhook secret handling', () => {
 	const node = {
@@ -9,9 +8,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 		type: 'limeCrmFormsTrigger',
 	};
 
-	beforeAll(() => {
-		process.env.N8N_ENCRYPTION_KEY = 'test-master-encryption-key';
-	});
+	const credentialSecret = 'a'.repeat(64);
 
 	const buildLoader = (overrides: Record<string, unknown> = {}) => ({
 		getNode: jest.fn().mockReturnValue(node),
@@ -20,7 +17,10 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 		getInstanceBaseUrl: jest.fn().mockReturnValue('https://n8n.example.com/'),
 		getExecutionId: jest.fn().mockReturnValue('exec-id'),
 		getMode: jest.fn().mockReturnValue('manual'),
-		getCredentials: jest.fn().mockResolvedValue({ url: 'https://api.example.com' }),
+		getCredentials: jest.fn().mockResolvedValue({
+			url: 'https://api.example.com',
+			webhookSecret: credentialSecret,
+		}),
 		helpers: {
 			returnJsonArray: jest.fn((data: unknown) => data),
 		},
@@ -28,7 +28,7 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 	});
 
 	describe('create', () => {
-		it('stores an encrypted secret in static data and sends the plaintext to Lime Forms', async () => {
+		it('sends the credential secret to Lime Forms without persisting it in static data', async () => {
 			const staticData: Record<string, unknown> = {};
 			const httpRequestWithAuthentication = jest
 				.fn()
@@ -55,11 +55,27 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 			};
 			// The workflow link is built from the instance base URL.
 			expect(sentBody.workflowUrl).toBe('https://n8n.example.com/workflow/wf');
-			// The plaintext secret goes to Lime, never persisted as-is.
-			expect(staticData.webhookSecret).toBeDefined();
-			expect(staticData.webhookSecret).not.toBe(sentBody.secret);
-			// The stored value decrypts back to exactly what Lime received.
-			expect(decryptSecret(staticData.webhookSecret as string)).toBe(sentBody.secret);
+			// The secret handed to Lime Forms is the one from the credential
+			// and no copy of it ends up in the workflow static data.
+			expect(sentBody.secret).toBe(credentialSecret);
+			expect(staticData.webhookSecret).toBeUndefined();
+		});
+
+		it('fails when the credential has no webhook secret', async () => {
+			const loader = buildLoader({
+				getCredentials: jest.fn().mockResolvedValue({ url: 'https://api.example.com' }),
+				getNodeParameter: jest
+					.fn()
+					.mockImplementation((name: string) => (name === 'name' ? 'my-webhook' : 'form-1')),
+				getNodeWebhookUrl: jest.fn().mockReturnValue('https://n8n.example.com/webhook'),
+				getWorkflowStaticData: jest.fn().mockReturnValue({}),
+			});
+
+			const trigger = new LimeFormsTrigger();
+			await expect(trigger.webhookMethods.default.create.call(loader as never)).rejects.toThrow(
+				'The credential has no Webhook Secret. Add one to the ' +
+					'credential and re-activate the workflow.',
+			);
 		});
 
 		describe('when Lime Forms reports a duplicate', () => {
@@ -139,10 +155,10 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 						method: 'POST',
 						url: '/api/v1/observable-webhooks',
 					});
-					// The retry keeps the secret we already stored encrypted.
-					expect(decryptSecret(staticData.webhookSecret as string)).toBe(
-						(retryOptions.body as { secret: string }).secret,
-					);
+					// The retry sends the credential secret and leaves no
+					// copy of it in the workflow static data.
+					expect((retryOptions.body as { secret: string }).secret).toBe(credentialSecret);
+					expect(staticData.webhookSecret).toBeUndefined();
 				},
 			);
 
@@ -202,20 +218,40 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 		});
 	});
 
-	describe('webhook', () => {
-		const buildSignedRequest = (rawSecret: string) => {
-			const staticData = {
+	describe('checkExists', () => {
+		it('re-registers webhooks that still have a legacy secret in static data', async () => {
+			const staticData: Record<string, unknown> = {
 				id: 'wh-123',
-				webhookSecret: encryptSecret(rawSecret),
+				webhookSecret: 'legacy-encrypted-blob',
 			};
+			const httpRequestWithAuthentication = jest.fn();
+
+			const loader = buildLoader({
+				getWorkflowStaticData: jest.fn().mockReturnValue(staticData),
+				helpers: { httpRequestWithAuthentication },
+			});
+
+			const trigger = new LimeFormsTrigger();
+			const result = await trigger.webhookMethods.default.checkExists.call(loader as never);
+
+			// Reported as missing so `create` re-registers the webhook with
+			// the secret from the credential.
+			expect(result).toBe(false);
+			expect(staticData.webhookSecret).toBeUndefined();
+			expect(httpRequestWithAuthentication).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('webhook', () => {
+		const buildSignedRequest = (secret: string) => {
+			const staticData = { id: 'wh-123' };
 			const body = { data: { formId: 'form-1', value: 'hello' } };
-			const signature = createHmac('sha256', rawSecret).update(JSON.stringify(body)).digest('hex');
+			const signature = createHmac('sha256', secret).update(JSON.stringify(body)).digest('hex');
 			return { staticData, body, signature };
 		};
 
-		it('validates the signature using the decrypted static-data secret', async () => {
-			const rawSecret = 'a'.repeat(64);
-			const { staticData, body, signature } = buildSignedRequest(rawSecret);
+		it('validates the signature using the credential secret', async () => {
+			const { staticData, body, signature } = buildSignedRequest(credentialSecret);
 
 			const loader = buildLoader({
 				getBodyData: jest.fn().mockReturnValue(body),
@@ -229,9 +265,8 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 			expect(response.workflowData).toEqual([[body.data]]);
 		});
 
-		it('returns an error when the signature does not match the stored secret', async () => {
-			const rawSecret = 'b'.repeat(64);
-			const { staticData, body } = buildSignedRequest(rawSecret);
+		it('returns an error when the signature does not match the credential secret', async () => {
+			const { staticData, body } = buildSignedRequest('b'.repeat(64));
 
 			const loader = buildLoader({
 				// Keep the error on the regular output instead of throwing.
@@ -255,20 +290,18 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 			]);
 		});
 
-		it('returns an error when no secret is stored in static data', async () => {
-			const body = { data: { formId: 'form-1' } };
-			const signature = createHmac('sha256', 'c'.repeat(64))
-				.update(JSON.stringify(body))
-				.digest('hex');
+		it('returns an error when the credential has no webhook secret', async () => {
+			const { staticData, body, signature } = buildSignedRequest(credentialSecret);
 
 			const loader = buildLoader({
 				getNode: jest.fn().mockReturnValue({
 					...node,
 					onError: 'continueRegularOutput',
 				}),
+				getCredentials: jest.fn().mockResolvedValue({ url: 'https://api.example.com' }),
 				getBodyData: jest.fn().mockReturnValue(body),
 				getHeaderData: jest.fn().mockReturnValue({ 'x-signature': signature }),
-				getWorkflowStaticData: jest.fn().mockReturnValue({}),
+				getWorkflowStaticData: jest.fn().mockReturnValue(staticData),
 			});
 
 			const trigger = new LimeFormsTrigger();
@@ -279,7 +312,10 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 					success: false,
 					data: {
 						error: {
-							message: 'Webhook is not registered: missing secret in static data',
+							message:
+								'The credential has no Webhook Secret. Add ' +
+								'one to the credential and re-activate the ' +
+								'workflow.',
 						},
 					},
 				},

@@ -1,10 +1,4 @@
-import {
-	ICredentialTestRequest,
-	ICredentialType,
-	INodeProperties,
-	IAuthenticate,
-	IHttpRequestMethods,
-} from 'n8n-workflow';
+import { ICredentialType, INodeProperties, IAuthenticate } from 'n8n-workflow';
 
 export const FORMS_API_CREDENTIALS_NAME = 'limeFormsApi';
 
@@ -27,8 +21,9 @@ export const FORMS_API_CREDENTIALS_NAME = 'limeFormsApi';
  *   - You can obtain it from Lime Forms Admin, under settings page.
  *
  * ## Testing Connection
- * The `test` property verifies credentials by pinging an endpoint of the provided Lime Forms instance.
- * If the response is successful (HTTP 200), the credentials are valid.
+ * The credential is tested by the `limeFormsApiTest` function (see `nodes/credentialTests.ts`),
+ * which validates the optional webhook secret locally and verifies the URL and API key
+ * by pinging an endpoint of the provided Lime Forms instance.
  *
  * ## Related Documentation
  * - Lime Forms Internal Documentation: https://docs.lime-forms.com/
@@ -62,15 +57,23 @@ export class LimeFormsApi implements ICredentialType {
 			required: true,
 			description: 'API key obtained from Lime Forms',
 		},
-	];
-
-	test: ICredentialTestRequest = {
-		request: {
-			baseURL: '={{$credentials.url}}'.replace('/+$', ''),
-			url: '/api/v1/external-integrations/ping',
-			method: 'GET' as IHttpRequestMethods,
+		{
+			displayName: 'Webhook Secret',
+			name: 'webhookSecret',
+			type: 'string',
+			typeOptions: {
+				password: true,
+			},
+			default: '',
+			description:
+				'Secret used to sign and verify webhook calls from Lime ' +
+				'Forms. Required only when using the Lime Forms Trigger ' +
+				'node. Use a strong random value of at least 32 ' +
+				'characters, e.g. generated with <code>openssl rand -hex ' +
+				'32</code>. Workflows with a Lime Forms Trigger must be ' +
+				're-activated after changing it.',
 		},
-	};
+	];
 
 	authenticate: IAuthenticate = {
 		type: 'generic',
