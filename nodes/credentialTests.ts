@@ -64,49 +64,6 @@ const validateWebhookSecret = (
 };
 
 /**
- * Credential test for the Lime CRM API credential.
- *
- * Validates the optional webhook secret locally and verifies the server URL
- * and API key by pinging the Lime CRM API.
- *
- * @param credential - The decrypted credential to test
- * @returns The test result shown in the credential modal.
- *
- * @public
- * @group Utils
- */
-export async function limeCrmApiTest(
-	this: ICredentialTestFunctions,
-	credential: ICredentialsDecrypted,
-): Promise<INodeCredentialTestResult> {
-	const data = credential.data ?? {};
-
-	const invalidSecret = validateWebhookSecret(data);
-	if (invalidSecret) {
-		return invalidSecret;
-	}
-
-	try {
-		await this.helpers.request({
-			method: 'GET',
-			uri: `${stripTrailingSlashes(data.url as string)}/api/v1/`,
-			json: true,
-			headers: {
-				'X-API-Key': data.apiKey,
-				Accept: 'application/json',
-			},
-		});
-	} catch (error) {
-		return {
-			status: 'Error',
-			message: `Connection failed: ${error.message}`,
-		};
-	}
-
-	return { status: 'OK', message: 'Connection successful' };
-}
-
-/**
  * Credential test for the Lime CRM Forms API credential.
  *
  * Validates the optional webhook secret locally and verifies the server URL
