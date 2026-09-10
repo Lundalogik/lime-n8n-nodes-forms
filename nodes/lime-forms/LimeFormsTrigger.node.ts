@@ -146,7 +146,11 @@ export class LimeFormsTrigger implements INodeType {
 					action: ObservableActionType.FORM_SUBMITTED,
 					webhookUrl: this.getNodeWebhookUrl('default'),
 					secret: rawSecret,
-					workflowUrl: getWorkflowUrl(this.getNode(), this.getWorkflow().id),
+					workflowUrl: getWorkflowUrl(
+						this.getNode(),
+						this.getInstanceBaseUrl(),
+						this.getWorkflow().id,
+					),
 				};
 
 				const registerWebhook = async (): Promise<boolean> => {
