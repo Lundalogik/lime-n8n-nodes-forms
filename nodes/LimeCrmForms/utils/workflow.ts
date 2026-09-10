@@ -1,4 +1,3 @@
-import { URL } from 'node:url';
 import { INode, NodeOperationError } from 'n8n-workflow';
 
 export function getWorkflowUrl(
