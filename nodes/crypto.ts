@@ -1,8 +1,5 @@
-import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes } from 'node:crypto';
+import { createHmac } from 'node:crypto';
 import { NodeOperationError, INode } from 'n8n-workflow';
-
-const ENCRYPTION_KEY_ENV = 'N8N_ENCRYPTION_KEY';
-const HKDF_INFO = 'lime-webhook-secret';
 
 /**
  * Generate an HMAC SHA-256 hash for the given data using the provided key.
@@ -67,52 +64,4 @@ export const verifyRequest = (
 	if (expectedHmac !== limeSignature) {
 		throw new NodeOperationError(node, 'Webhook authentication failed, signatures do not match');
 	}
-};
-
-/**
- * Retrieves the master encryption key from the environment variable.
- * Throws an error if the environment variable is not set.
- *
- * @return The master encryption key.
- */
-const getMasterKey = (): string => {
-	const key = process.env[ENCRYPTION_KEY_ENV];
-	if (!key) {
-		throw new Error(`${ENCRYPTION_KEY_ENV} must be set to manage Lime CRM webhooks`);
-	}
-	return key;
-};
-
-/**
- * Encrypts a plaintext string using AES-256-GCM with a derived key based on HKDF.
- *
- * @param plaintext - The plain text string to be encrypted.
- * @return The encrypted string encoded in base64 format.
- */
-export const encryptSecret = (plaintext: string): string => {
-	const salt = randomBytes(16);
-	const iv = randomBytes(12);
-	const key = Buffer.from(hkdfSync('sha256', getMasterKey(), salt, HKDF_INFO, 32));
-	const cipher = createCipheriv('aes-256-gcm', key, iv);
-	const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
-	const tag = cipher.getAuthTag();
-	return Buffer.concat([salt, iv, tag, ct]).toString('base64');
-};
-
-/**
- * Decrypts a Base64-encoded secret using AES-256-GCM with key derivation.
- *
- * @param blob - The Base64-encoded string containing the encrypted data, including salt, IV, authentication tag, and ciphertext.
- * @return The decrypted data as a UTF-8 string.
- */
-export const decryptSecret = (blob: string): string => {
-	const buf = Buffer.from(blob, 'base64');
-	const salt = buf.subarray(0, 16);
-	const iv = buf.subarray(16, 28);
-	const tag = buf.subarray(28, 44);
-	const ct = buf.subarray(44);
-	const key = Buffer.from(hkdfSync('sha256', getMasterKey(), salt, HKDF_INFO, 32));
-	const decipher = createDecipheriv('aes-256-gcm', key, iv);
-	decipher.setAuthTag(tag);
-	return Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8');
 };
