@@ -1,7 +1,7 @@
 {
 	"name": "@limetech/n8n-nodes-lime-forms",
 	"version": "0.0.0-semantically-released",
-	"description": "n8n community node for Lime Forms — trigger workflows on form submissions",
+	"description": "n8n community node for Lime Forms — trigger workflows on form submissions and fetch submission receipts",
 	"license": "MIT",
 	"homepage": "https://www.lime-technologies.com",
 	"keywords": [
@@ -43,7 +43,8 @@
 			"dist/credentials/LimeFormsApi.credentials.js"
 		],
 		"nodes": [
-			"dist/nodes/LimeCrmFormsTrigger/LimeCrmFormsTrigger.node.js"
+			"dist/nodes/LimeCrmForms/LimeCrmForms.node.js",
+			"dist/nodes/LimeCrmForms/LimeCrmFormsTrigger.node.js"
 		]
 	},
 	"devDependencies": {
