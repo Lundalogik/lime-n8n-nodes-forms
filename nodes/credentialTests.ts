@@ -87,6 +87,9 @@ export async function limeFormsApiTest(
 	}
 
 	try {
+		// ICredentialTestFunctions only exposes the request helper (no httpRequest),
+		// so the deprecation rule cannot be satisfied in a credential test.
+		// eslint-disable-next-line @n8n/community-nodes/no-deprecated-workflow-functions
 		await this.helpers.request({
 			method: 'GET',
 			uri: `${stripTrailingSlashes(data.url as string)}/api/v1/external-integrations/ping`,
