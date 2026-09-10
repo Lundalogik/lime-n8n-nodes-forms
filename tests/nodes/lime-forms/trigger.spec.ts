@@ -11,13 +11,13 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 
 	beforeAll(() => {
 		process.env.N8N_ENCRYPTION_KEY = 'test-master-encryption-key';
-		process.env.WEBHOOK_URL = 'https://n8n.example.com';
 	});
 
 	const buildLoader = (overrides: Record<string, unknown> = {}) => ({
 		getNode: jest.fn().mockReturnValue(node),
 		getWorkflow: jest.fn().mockReturnValue({ id: 'wf', name: 'Workflow' }),
 		getInstanceId: jest.fn().mockReturnValue('instance-id'),
+		getInstanceBaseUrl: jest.fn().mockReturnValue('https://n8n.example.com/'),
 		getExecutionId: jest.fn().mockReturnValue('exec-id'),
 		getMode: jest.fn().mockReturnValue('manual'),
 		getCredentials: jest.fn().mockResolvedValue({ url: 'https://api.example.com' }),
@@ -49,7 +49,12 @@ describe('LimeFormsTrigger webhook secret handling', () => {
 			expect(result).toBe(true);
 			expect(staticData.id).toBe('wh-123');
 
-			const sentBody = httpRequestWithAuthentication.mock.calls[0][1].body as { secret: string };
+			const sentBody = httpRequestWithAuthentication.mock.calls[0][1].body as {
+				secret: string;
+				workflowUrl: string;
+			};
+			// The workflow link is built from the instance base URL.
+			expect(sentBody.workflowUrl).toBe('https://n8n.example.com/workflow/wf');
 			// The plaintext secret goes to Lime, never persisted as-is.
 			expect(staticData.webhookSecret).toBeDefined();
 			expect(staticData.webhookSecret).not.toBe(sentBody.secret);
