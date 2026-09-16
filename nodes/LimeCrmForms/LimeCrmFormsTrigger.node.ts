@@ -72,15 +72,16 @@ export class LimeCrmFormsTrigger implements INodeType {
 				description: 'Name for this webhook subscription',
 			},
 			{
-				displayName: 'Form to Monitor Name or ID',
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+				displayName: 'Form to Monitor',
 				name: 'formId',
 				type: 'options',
 				typeOptions: {
 					loadOptionsMethod: 'getForms',
 				},
 				default: '',
-				description:
-					'Form to observe submissions for. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				// eslint-disable-next-line n8n-nodes-base/node-param-description-wrong-for-dynamic-options
+				description: 'Form to observe submissions for',
 			},
 		],
 	};
