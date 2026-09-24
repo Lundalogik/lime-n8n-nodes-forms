@@ -10,7 +10,9 @@ This is an n8n community node. It lets you use Lime CRM Forms in your n8n workfl
 [Operations](#operations)
 [Credentials](#credentials)
 [Compatibility](#compatibility)
+[Usage](#usage)
 [Resources](#resources)
+[Version history](#version-history)
 [Development](#development)
 
 ## Installation
@@ -44,11 +46,83 @@ To use the trigger, also set the optional **Webhook Secret** in the credential; 
 
 Requires n8n with `n8n-workflow` 2.9 or later. Node.js 24 is used for local development.
 
+## Usage
+
+### Lime CRM Forms Trigger: start a workflow when a form is submitted
+
+1. Add a **Lime CRM Forms Trigger** node and select your **Lime CRM Forms API** credential. The credential must have a **Webhook Secret**.
+2. Enter a **Trigger Name** (for example `my-lime-webhook`) and pick the form under **Form to Monitor**.
+3. Activate the workflow. The node registers a webhook for that form and removes it again when the workflow is deactivated.
+
+Each submission becomes one item with a fixed top-level shape: `slug`, `createdAt`, `form` (`id`, `name`, `description`, `locale`, `tags`) and `data`, a map of the submitted fields keyed by field name. Each entry in `data` is `{ type, name, label, value }`:
+
+```json
+{
+	"slug": "k3j9x2",
+	"createdAt": "2026-09-30T10:00:00.000000Z",
+	"form": {
+		"id": 1,
+		"name": "Contact us",
+		"description": null,
+		"locale": "en",
+		"tags": ["website"]
+	},
+	"data": {
+		"email": {
+			"type": "EmailField",
+			"name": "email",
+			"label": "Email",
+			"value": { "email": "jane@example.com" }
+		},
+		"topics": {
+			"type": "CheckboxField",
+			"name": "topics",
+			"label": "Topics",
+			"value": { "option": ["sales", "support"] }
+		},
+		"attachment": {
+			"type": "FileUploadField",
+			"name": "attachment",
+			"label": "Attachment",
+			"value": { "file": [{ "link": "https://...", "name": "cv", "ext": ".pdf" }] }
+		}
+	}
+}
+```
+
+The key inside `value` depends on the field type:
+
+| Value key                                                              | Field types                                                                                                                       |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `text`                                                                 | `TextField`, `TextAreaField`, `HiddenField`, `AddressField`, `CoordinatesField`, `HttpSearchField`, `HttpSearchFieldAutocomplete` |
+| `email`                                                                | `EmailField`                                                                                                                      |
+| `numeric`                                                              | `NumericField`                                                                                                                    |
+| `date` (`YYYY-MM-DD`)                                                  | `DateField`                                                                                                                       |
+| `time` (`HH:mm`)                                                       | `TimeField`                                                                                                                       |
+| `option` (array)                                                       | `SelectField`, `RadioButtonField`, `CheckboxField`                                                                                |
+| `file` (array of `{ link, name, ext }`; links expire after 30 minutes) | `FileUploadField`                                                                                                                 |
+| `repeater`                                                             | `RepeaterField`                                                                                                                   |
+
+Reference a field in later nodes as `{{ $json.data.<field>.value.<key> }}`, for example `{{ $json.data.email.value.email }}`.
+
+### Lime CRM Forms: download the receipt for a submission
+
+1. Add a **Lime CRM Forms** node and select your **Lime CRM Forms API** credential.
+2. Set **Resource** to **Receipt** and **Operation** to **Get**.
+3. Enter the **Submission Slug** of the submission, for example from a previous node's output.
+4. Set **Receipt Type** to **Submission** (the submitted form data) or **Signing** (the signing receipt).
+
+The node outputs one item per input item with the PDF in the binary property `data`, ready for a **Write Binary File**, **Send Email** or similar node. Requires Lime CRM Forms 3.x or later.
+
 ## Resources
 
 - [Lime CRM node reference](https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/node-reference/)
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
 - [Lime Technologies](https://www.lime-technologies.com/)
+
+## Version history
+
+The full history is generated by semantic-release in [CHANGELOG.md](CHANGELOG.md) and on the [GitHub releases](https://github.com/Lundalogik/lime-n8n-nodes-forms/releases) page.
 
 ## Development
 
