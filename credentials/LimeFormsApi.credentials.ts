@@ -26,7 +26,7 @@ export const FORMS_API_CREDENTIALS_NAME = 'limeFormsApi';
  * by pinging an endpoint of the provided Lime Forms instance.
  *
  * ## Related Documentation
- * - Lime Forms Internal Documentation: https://docs.lime-forms.com/
+ * - Lime CRM Forms API credential setup: https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/credential-setup/#lime-crm-forms-api
  * - n8n Credentials Guide: https://docs.n8n.io/integrations/credentials/
  * - Forms authentication layer, Laravel Sanctum: https://laravel.com/docs/12.x/sanctum
  *
@@ -34,7 +34,8 @@ export const FORMS_API_CREDENTIALS_NAME = 'limeFormsApi';
 export class LimeFormsApi implements ICredentialType {
 	name = FORMS_API_CREDENTIALS_NAME;
 	displayName = 'Lime CRM Forms API';
-	documentationUrl = 'https://docs.lime-forms.com/';
+	documentationUrl =
+		'https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/credential-setup/#lime-crm-forms-api';
 	icon = 'file:assets/lime-crm.svg' as const;
 	properties: INodeProperties[] = [
 		{
