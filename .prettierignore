@@ -1,0 +1,6 @@
+dist/
+node_modules/
+restore_script/
+package-lock.json
+CHANGELOG.md
+README
