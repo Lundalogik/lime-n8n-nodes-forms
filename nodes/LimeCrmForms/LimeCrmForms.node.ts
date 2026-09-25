@@ -18,6 +18,8 @@ export class LimeCrmForms implements INodeType {
 		name: 'limeCrmForms',
 		documentationUrl:
 			'https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/node-reference/',
+		// Single-file icon on purpose: it carries its own background and renders the same on both themes.
+		// eslint-disable-next-line @n8n/community-nodes/icon-prefer-themed-variants
 		icon: 'file:assets/lime-forms.svg',
 		group: ['transform'],
 		version: 1,
