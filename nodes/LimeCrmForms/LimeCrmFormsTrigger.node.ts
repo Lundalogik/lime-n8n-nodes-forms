@@ -39,6 +39,8 @@ export class LimeCrmFormsTrigger implements INodeType {
 		group: ['trigger'],
 		subtitle: 'On form submission',
 		version: 1,
+		// Single-file icon on purpose: it carries its own background and renders the same on both themes.
+		// eslint-disable-next-line @n8n/community-nodes/icon-prefer-themed-variants
 		icon: 'file:assets/lime-forms.svg',
 		description: 'Handle webhooks from Lime CRM Forms',
 		defaults: {
