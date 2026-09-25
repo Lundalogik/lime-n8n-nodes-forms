@@ -7,6 +7,14 @@ updates:
     groups:
       minor-and-patch:
         update-types: ['minor', 'patch']
+    ignore:
+      # @n8n/node-cli pins eslint 9.x and typescript-eslint 8.x (TypeScript <6.1).
+      # Major bumps of these break `n8n-node lint` / `npm ci`.
+      # Revisit when @n8n/node-cli moves to eslint 10 / TypeScript 7 (see #16).
+      - dependency-name: 'eslint'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: 'github-actions'
     directory: '/'
