@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/Lundalogik/lime-n8n-nodes-forms/compare/v1.0.0...v1.0.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* compare webhook HMAC signatures in constant time ([1217d75](https://github.com/Lundalogik/lime-n8n-nodes-forms/commit/1217d7505b0e51dc96ef6730c0cd1c4dcb8714ce))
+* **credentials:** point documentationUrl at the credential setup page ([9dbac8c](https://github.com/Lundalogik/lime-n8n-nodes-forms/commit/9dbac8c0752651d2a2a0ada2863e1c55f6852dbe))
+
 # 1.0.0 (2026-09-24)
 
 
