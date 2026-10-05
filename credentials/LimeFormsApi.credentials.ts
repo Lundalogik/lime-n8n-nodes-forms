@@ -36,7 +36,7 @@ export class LimeFormsApi implements ICredentialType {
 	displayName = 'Lime CRM Forms API';
 	documentationUrl =
 		'https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/credential-setup/#lime-crm-forms-api';
-	icon = 'file:assets/lime-crm.svg' as const;
+	icon = 'file:assets/lime-forms.svg' as const;
 	properties: INodeProperties[] = [
 		{
 			displayName: 'Server URL',
