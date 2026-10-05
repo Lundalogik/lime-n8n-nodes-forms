@@ -26,7 +26,8 @@ export const FORMS_API_CREDENTIALS_NAME = 'limeFormsApi';
  * by pinging an endpoint of the provided Lime Forms instance.
  *
  * ## Related Documentation
- * - Lime CRM Forms API credential setup: https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/credential-setup/#lime-crm-forms-api
+ * - Lime CRM Forms API credential setup:
+ * https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/credential-setup/#lime-crm-forms-api
  * - n8n Credentials Guide: https://docs.n8n.io/integrations/credentials/
  * - Forms authentication layer, Laravel Sanctum: https://laravel.com/docs/12.x/sanctum
  *
