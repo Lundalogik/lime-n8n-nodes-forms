@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Lundalogik/lime-n8n-nodes-forms/compare/v1.0.1...v1.1.0) (2026-10-06)
+
+
+### Features
+
+* trigger release ([b4c7bd6](https://github.com/Lundalogik/lime-n8n-nodes-forms/commit/b4c7bd6c877aef225b68994b58d6fefb887d4ca7))
+
 ## [1.0.1](https://github.com/Lundalogik/lime-n8n-nodes-forms/compare/v1.0.0...v1.0.1) (2026-09-30)
 
 
