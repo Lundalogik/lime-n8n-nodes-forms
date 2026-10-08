@@ -3,6 +3,7 @@ import { ApiErrorResponse } from '../types/resources/ApiErrorResponse';
 import { ObservableWebhookSimpleResource } from '../types/resources/ObservableWebhookResources';
 
 const HTTP_STATUS_CONFLICT = 409;
+const HTTP_STATUS_NOT_FOUND = 404;
 
 /**
  * Pull the conflicting webhook out of a 409 from Lime Forms. Its `store()`
@@ -39,4 +40,14 @@ export function getConflictingWebhook(
 	}
 
 	return responseData;
+}
+
+/**
+ * Whether the error n8n raised for a failed request is a 404. A Lime Forms
+ * without an API version answers 404 on its routes.
+ *
+ * @param error - the error n8n raised for the failed request
+ */
+export function isNotFound(error: unknown): boolean {
+	return Number((error as NodeApiError | undefined)?.httpCode) === HTTP_STATUS_NOT_FOUND;
 }

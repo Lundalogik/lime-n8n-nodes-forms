@@ -22,13 +22,52 @@ import { ObservableActionType } from './types/enums/ObservableAction';
 import { ObservableType } from './types/enums/ObservableType';
 import { FORMS_API_CREDENTIALS_NAME } from '../../credentials';
 import { getWorkflowUrl } from './utils/workflow';
-import { verifyHmac } from '../crypto';
-import { getWebhookSecret } from '../webhookSecret';
+import {
+	SIGNATURE_VERSION_V1,
+	SIGNATURE_VERSION_V2,
+	SignatureVersion,
+	deliveryReplayCache,
+	verifyDelivery,
+} from '../crypto';
+import { getWebhookSecret, getWebhookSecrets } from '../webhookSecret';
 import { limeFormsApiTest } from '../credentialTests';
-import { getConflictingWebhook } from './utils/errors';
+import { getConflictingWebhook, isNotFound } from './utils/errors';
 import { handleWorkflowError } from '../errorHandling';
 
 const FORMS_OBSERVABLE_WEBHOOK_NAME_PREFIX = 'N8N';
+/**
+ * The version of the API a webhook is registered through decides how Lime
+ * Forms signs its deliveries: version 1 signs the body, version 2 signs the
+ * delivery id, the delivery timestamp and the body.
+ */
+const OBSERVABLE_WEBHOOKS_URL = '/api/v1/observable-webhooks';
+const OBSERVABLE_WEBHOOKS_URL_V2 = '/api/v2/observable-webhooks';
+
+/**
+ * @param version - The signature version of the webhook
+ * @returns The observable webhooks endpoint of the matching API version
+ */
+function observableWebhooksUrl(version: SignatureVersion): string {
+	return version === SIGNATURE_VERSION_V2 ? OBSERVABLE_WEBHOOKS_URL_V2 : OBSERVABLE_WEBHOOKS_URL;
+}
+
+/**
+ * The signature of a delivery, with its version prefix. Version 1 deliveries
+ * carry the bare digest in `x-signature`, version 2 deliveries a prefixed
+ * value in `x-lime-signature`.
+ *
+ * @param headers - The headers of the delivery
+ * @returns The prefixed signature, or `undefined` when there is none
+ */
+function signatureOf(headers: IDataObject): string | undefined {
+	if (typeof headers['x-lime-signature'] === 'string') {
+		return headers['x-lime-signature'];
+	}
+	if (typeof headers['x-signature'] === 'string') {
+		return 'sha256=' + headers['x-signature'];
+	}
+	return undefined;
+}
 
 export class LimeCrmFormsTrigger implements INodeType {
 	description: INodeTypeDescription = {
@@ -132,9 +171,11 @@ export class LimeCrmFormsTrigger implements INodeType {
 				if (webhookId === undefined) {
 					return false;
 				}
+				const version =
+					(webhookData.signatureVersion as SignatureVersion | undefined) ?? SIGNATURE_VERSION_V1;
 				try {
 					const response = await new LimeFormsRequest<ObservableWebhookSimpleResource>(this).get(
-						`/api/v1/observable-webhooks/${webhookId}`,
+						`${observableWebhooksUrl(version)}/${webhookId}`,
 					);
 					return response.data !== null;
 				} catch (error) {
@@ -172,11 +213,34 @@ export class LimeCrmFormsTrigger implements INodeType {
 					),
 				};
 
+				const register = async (url: string) =>
+					await new LimeFormsRequest<ObservableWebhookDetailedResource>(this).post(url, data);
+
+				// Version 2 first. A Lime Forms without that API answers 404,
+				// in which case the webhook is registered through version 1
+				// and delivers with version 1 signatures.
+				const registerThroughNewestApi = async () => {
+					try {
+						return {
+							response: await register(OBSERVABLE_WEBHOOKS_URL_V2),
+							signatureVersion: SIGNATURE_VERSION_V2,
+						};
+					} catch (error) {
+						if (!isNotFound(error)) {
+							// Already a NodeApiError; wrapping it would hide the
+							// response body that the 409 handling reads.
+							// eslint-disable-next-line @n8n/community-nodes/require-node-api-error
+							throw error;
+						}
+					}
+					return {
+						response: await register(OBSERVABLE_WEBHOOKS_URL),
+						signatureVersion: SIGNATURE_VERSION_V1,
+					};
+				};
+
 				const registerWebhook = async (): Promise<boolean> => {
-					const response = await new LimeFormsRequest<ObservableWebhookDetailedResource>(this).post(
-						'/api/v1/observable-webhooks',
-						data,
-					);
+					const { response, signatureVersion } = await registerThroughNewestApi();
 
 					if (!response.success) {
 						throw new NodeApiError(this.getNode(), {
@@ -185,6 +249,7 @@ export class LimeCrmFormsTrigger implements INodeType {
 					}
 
 					webhookData.id = response.data.id;
+					webhookData.signatureVersion = signatureVersion;
 
 					return true;
 				};
@@ -232,9 +297,11 @@ export class LimeCrmFormsTrigger implements INodeType {
 				if (webhookId === undefined) {
 					return false;
 				}
+				const version =
+					(webhookData.signatureVersion as SignatureVersion | undefined) ?? SIGNATURE_VERSION_V1;
 
 				const response = await new LimeFormsRequest<ObservableWebhookSimpleResource>(this).delete(
-					`/api/v1/observable-webhooks/${webhookId}`,
+					`${observableWebhooksUrl(version)}/${webhookId}`,
 				);
 
 				if (!response.success) {
@@ -245,6 +312,7 @@ export class LimeCrmFormsTrigger implements INodeType {
 
 				delete webhookData.id;
 				delete webhookData.webhookSecret;
+				delete webhookData.signatureVersion;
 
 				return true;
 			},
@@ -254,26 +322,38 @@ export class LimeCrmFormsTrigger implements INodeType {
 	async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
 		const body = this.getBodyData();
 		const headers = this.getHeaderData();
+		// The signature covers the bytes on the wire. Re-serialising the
+		// parsed body is not guaranteed to reproduce them.
+		const rawBody = this.getRequestObject().rawBody;
+		const webhookData = this.getWorkflowStaticData('node');
 		const returnData: IDataObject[] = [];
 
 		try {
-			if (!('x-signature' in headers)) {
+			const signature = signatureOf(headers);
+			if (signature === undefined) {
 				throw new NodeOperationError(
 					this.getNode(),
 					'No signature header passed. Unable to verify integrity of the data.',
 				);
 			}
 
-			const webhookSecret = await getWebhookSecret(this, FORMS_API_CREDENTIALS_NAME);
-			const isValidSignature = verifyHmac(
-				webhookSecret,
-				Buffer.from(JSON.stringify(body)),
-				('sha256=' + headers['x-signature']) as string,
+			const webhookSecrets = await getWebhookSecrets(this, FORMS_API_CREDENTIALS_NAME);
+			verifyDelivery(
+				this.getNode(),
+				{
+					signature,
+					deliveryId: headers['x-lime-delivery-id'] as string | undefined,
+					timestamp: headers['x-lime-delivery-timestamp'] as string | undefined,
+				},
+				webhookSecrets,
+				rawBody,
+				{
+					// Webhooks registered before version 2 existed sign with version 1
+					expectedVersion:
+						(webhookData.signatureVersion as SignatureVersion | undefined) ?? SIGNATURE_VERSION_V1,
+					replayCache: deliveryReplayCache,
+				},
 			);
-
-			if (!isValidSignature) {
-				throw new NodeOperationError(this.getNode(), 'Invalid signature');
-			}
 			returnData.push(body.data as IDataObject);
 		} catch (error) {
 			const response = handleWorkflowError(this.getNode(), {
