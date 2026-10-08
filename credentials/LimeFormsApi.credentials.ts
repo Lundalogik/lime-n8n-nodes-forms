@@ -72,8 +72,23 @@ export class LimeFormsApi implements ICredentialType {
 				'Forms. Required only when using the Lime Forms Trigger ' +
 				'node. Use a strong random value of at least 32 ' +
 				'characters, e.g. generated with <code>openssl rand -hex ' +
-				'32</code>. Workflows with a Lime Forms Trigger must be ' +
-				're-activated after changing it.',
+				'32</code>. When changing it, move the old value to Previous ' +
+				'Webhook Secret and re-activate workflows with a Lime Forms ' +
+				'Trigger so their webhooks sign with the new one.',
+		},
+		{
+			displayName: 'Previous Webhook Secret',
+			name: 'previousWebhookSecret',
+			type: 'string',
+			typeOptions: {
+				password: true,
+			},
+			default: '',
+			description:
+				'The Webhook Secret in use before it was last changed. ' +
+				'Webhook calls signed with it are still accepted, so ' +
+				'workflows keep running until each one has been ' +
+				're-activated. Clear it once no workflow signs with it.',
 		},
 	];
 

@@ -31,3 +31,38 @@ export async function getWebhookSecret(
 	}
 	return webhookSecret;
 }
+
+/**
+ * Read the secrets a delivery may be signed with: the webhook secret and,
+ * while a rotation is in progress, the previous one.
+ *
+ * Lime signs with the secret a subscription was registered with. After the
+ * credential is rotated, subscriptions keep the old secret until their
+ * workflow is re-activated, so the previous secret has to be accepted for
+ * them to keep working.
+ *
+ * @param context - The n8n hook or webhook context of the trigger node
+ * @param credentialType - The credential type that holds the secrets
+ * @returns The current secret first, then the previous one if it is set
+ *
+ * @throws {NodeOperationError} if the credential has no webhook secret
+ *
+ * @public
+ * @group Utils
+ */
+export async function getWebhookSecrets(
+	context: IHookFunctions | IWebhookFunctions,
+	credentialType: string,
+): Promise<string[]> {
+	const webhookSecret = await getWebhookSecret(context, credentialType);
+	const credentials = await context.getCredentials(credentialType);
+	const previousWebhookSecret = credentials.previousWebhookSecret;
+	if (
+		typeof previousWebhookSecret === 'string' &&
+		previousWebhookSecret !== '' &&
+		previousWebhookSecret !== webhookSecret
+	) {
+		return [webhookSecret, previousWebhookSecret];
+	}
+	return [webhookSecret];
+}
