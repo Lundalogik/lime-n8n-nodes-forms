@@ -1,12 +1,11 @@
-# @limetech/n8n-nodes-lime-forms
+# @lundalogik/n8n-nodes-lime-forms
 
-This is an n8n community node. It lets you use Lime CRM Forms in your n8n workflows.
+This is a private n8n node package. It lets you use Lime CRM Forms in your n8n workflows.
 
 [Lime Forms](https://www.lime-technologies.com/) is a form-building product from Lime Technologies. This package lets you trigger n8n workflows when a form is submitted and retrieve receipts for submissions.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/) workflow automation platform.
 
-[Installation](#installation)
 [Operations](#operations)
 [Credentials](#credentials)
 [Compatibility](#compatibility)
@@ -14,10 +13,6 @@ This is an n8n community node. It lets you use Lime CRM Forms in your n8n workfl
 [Resources](#resources)
 [Version history](#version-history)
 [Development](#development)
-
-## Installation
-
-Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation and install `@limetech/n8n-nodes-lime-forms`.
 
 ## Operations
 
@@ -117,7 +112,6 @@ The node outputs one item per input item with the PDF in the binary property `da
 ## Resources
 
 - [Lime CRM node reference](https://platform.docs.lime-crm.com/en/latest/workflows-and-integrations/node-reference/)
-- [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
 - [Lime Technologies](https://www.lime-technologies.com/)
 
 ## Version history

@@ -1,5 +1,5 @@
 {
-	"name": "@limetech/n8n-nodes-lime-forms",
+	"name": "@lundalogik/n8n-nodes-lime-forms",
 	"version": "0.0.0-semantically-released",
 	"description": "n8n community node for Lime Forms — trigger workflows on form submissions and fetch submission receipts",
 	"license": "MIT",
@@ -64,6 +64,7 @@
 		"n8n-workflow": "*"
 	},
 	"publishConfig": {
-		"access": "public"
+		"access": "restricted",
+		"registry": "https://npm.pkg.github.com"
 	}
 }
