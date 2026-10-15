@@ -14,11 +14,10 @@ jobs:
     name: Semantic release
     runs-on: ubuntu-latest
 
+    # semantic-release authenticates with the lime-ci tokens below, so the job
+    # token itself only needs to read the repository.
     permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-      id-token: write
+      contents: read
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -33,7 +32,6 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          registry-url: https://registry.npmjs.org
 
       - name: Restore node_modules
         id: node-modules
@@ -52,10 +50,8 @@ jobs:
       - name: Semantic release
         run: npx semantic-release
         env:
-          # PAT of the lime-opensource service user, which pushes the release
-          # commit and creates the GitHub release in public repos.
-          GITHUB_TOKEN: ${{ secrets.LIME_OPENSOURCE_SEMANTIC_RELEASE }}
-          # Provenance is required by n8n for verified community nodes.
-          NPM_CONFIG_PROVENANCE: 'true'
-          # Lets the prepublishOnly guard (n8n-node prerelease) allow the publish.
+          GITHUB_TOKEN: ${{ secrets.LIME_CI_SEMANTIC_RELEASE }}
+          # Publishing to npm.pkg.github.com needs write:packages, which the
+          # semantic-release token deliberately does not carry.
+          NPM_TOKEN: ${{ secrets.LIME_CI_WRITE_PACKAGES }}
           RELEASE_MODE: 'true'
